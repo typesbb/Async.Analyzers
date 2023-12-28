@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using ResultVerify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
