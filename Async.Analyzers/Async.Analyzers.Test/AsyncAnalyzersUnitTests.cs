@@ -1,29 +1,30 @@
-﻿using Async.Analyzers;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using ResultVerify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
-    TaskResultAnalyzer,
-    TaskResultCodeFixProvider>;
+    Async.Analyzers.TaskResultAnalyzer,
+    Async.Analyzers.TaskResultCodeFixProvider>;
 using WaitVerify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
-    TaskWaitAnalyzer,
-    TaskWaitCodeFixProvider>;
+    Async.Analyzers.TaskWaitAnalyzer,
+    Async.Analyzers.TaskWaitCodeFixProvider>;
 using AwaiterResultVerify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
-    TaskAwaiterResultAnalyzer,
-    TaskAwaiterResultCodeFixProvider>;
+    Async.Analyzers.TaskAwaiterResultAnalyzer,
+    Async.Analyzers.TaskAwaiterResultCodeFixProvider>;
 using AsyncInsteadVerify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.CodeFixVerifier<
-    TaskAsyncInsteadAnalyzer,
-    TaskAsyncInsteadCodeFixProvider>;
+    Async.Analyzers.TaskAsyncInsteadAnalyzer,
+    Async.Analyzers.TaskAsyncInsteadCodeFixProvider>;
 
-[TestClass]
-public class AwaitAccessAnalyzerTests
+namespace Async.Analyzers
 {
-    [TestMethod]
-    public async Task TestResultUsage()
+    [TestClass]
+    public class AwaitAccessAnalyzerTests
     {
-        var testCode = @"
+        [TestMethod]
+        public async Task TestResultUsage()
+        {
+            var testCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -34,7 +35,7 @@ public class TestClass
     }
 }";
 
-        var fixedCode = @"
+            var fixedCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -45,16 +46,16 @@ public class TestClass
     }
 }";
 
-        var expectedDiagnostic = ResultVerify.Diagnostic(TaskResultAnalyzer.DiagnosticId)
-            .WithLocation(8, 22)
-            .WithArguments("Result");
+            var expectedDiagnostic = ResultVerify.Diagnostic(TaskResultAnalyzer.DiagnosticId)
+                .WithLocation(8, 22)
+                .WithArguments("Result");
 
-        await ResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
-    }
-    [TestMethod]
-    public async Task TestResultUsage2()
-    {
-        var testCode = @"
+            await ResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
+        [TestMethod]
+        public async Task TestResultUsage2()
+        {
+            var testCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -65,7 +66,7 @@ public class TestClass
     }
 }";
 
-        var fixedCode = @"
+            var fixedCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -76,16 +77,16 @@ public class TestClass
     }
 }";
 
-        var expectedDiagnostic = ResultVerify.Diagnostic(TaskResultAnalyzer.DiagnosticId)
-            .WithLocation(8, 22)
-            .WithArguments("Result");
+            var expectedDiagnostic = ResultVerify.Diagnostic(TaskResultAnalyzer.DiagnosticId)
+                .WithLocation(8, 22)
+                .WithArguments("Result");
 
-        await ResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
-    }
-    [TestMethod]
-    public async Task TestWaitUsage()
-    {
-        var testCode = @"
+            await ResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
+        [TestMethod]
+        public async Task TestWaitUsage()
+        {
+            var testCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -96,7 +97,7 @@ public class TestClass
     }
 }";
 
-        var fixedCode = @"
+            var fixedCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -107,16 +108,16 @@ public class TestClass
     }
 }";
 
-        var expectedDiagnostic = WaitVerify.Diagnostic(TaskWaitAnalyzer.DiagnosticId)
-            .WithLocation(8, 9)
-            .WithArguments("Wait()");
+            var expectedDiagnostic = WaitVerify.Diagnostic(TaskWaitAnalyzer.DiagnosticId)
+                .WithLocation(8, 9)
+                .WithArguments("Wait()");
 
-        await WaitVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
-    }
-    [TestMethod]
-    public async Task TestGetAwaiterUsage()
-    {
-        var testCode = @"
+            await WaitVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
+        [TestMethod]
+        public async Task TestGetAwaiterUsage()
+        {
+            var testCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -127,7 +128,7 @@ public class TestClass
     }
 }";
 
-        var fixedCode = @"
+            var fixedCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -138,16 +139,16 @@ public class TestClass
     }
 }";
 
-        var expectedDiagnostic = AwaiterResultVerify.Diagnostic(TaskAwaiterResultAnalyzer.DiagnosticId)
-            .WithLocation(8, 22)
-            .WithArguments("GetAwaiter().GetResult()");
+            var expectedDiagnostic = AwaiterResultVerify.Diagnostic(TaskAwaiterResultAnalyzer.DiagnosticId)
+                .WithLocation(8, 22)
+                .WithArguments("GetAwaiter().GetResult()");
 
-        await AwaiterResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
-    }
-    [TestMethod]
-    public async Task TestGetAwaiterUsage2()
-    {
-        var testCode = @"
+            await AwaiterResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
+        [TestMethod]
+        public async Task TestGetAwaiterUsage2()
+        {
+            var testCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -158,7 +159,7 @@ public class TestClass
     }
 }";
 
-        var fixedCode = @"
+            var fixedCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -169,16 +170,16 @@ public class TestClass
     }
 }";
 
-        var expectedDiagnostic = AwaiterResultVerify.Diagnostic(TaskAwaiterResultAnalyzer.DiagnosticId)
-            .WithLocation(8, 22)
-            .WithArguments("GetAwaiter().GetResult()");
+            var expectedDiagnostic = AwaiterResultVerify.Diagnostic(TaskAwaiterResultAnalyzer.DiagnosticId)
+                .WithLocation(8, 22)
+                .WithArguments("GetAwaiter().GetResult()");
 
-        await AwaiterResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
-    }
-    [TestMethod]
-    public async Task TestGetAwaiterUsage3()
-    {
-        var testCode = @"
+            await AwaiterResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
+        [TestMethod]
+        public async Task TestGetAwaiterUsage3()
+        {
+            var testCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -188,7 +189,7 @@ public class TestClass
     }
 }";
 
-        var fixedCode = @"
+            var fixedCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -198,16 +199,16 @@ public class TestClass
     }
 }";
 
-        var expectedDiagnostic = AwaiterResultVerify.Diagnostic(TaskAwaiterResultAnalyzer.DiagnosticId)
-            .WithLocation(7, 22)
-            .WithArguments("GetAwaiter().GetResult()");
+            var expectedDiagnostic = AwaiterResultVerify.Diagnostic(TaskAwaiterResultAnalyzer.DiagnosticId)
+                .WithLocation(7, 22)
+                .WithArguments("GetAwaiter().GetResult()");
 
-        await AwaiterResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
-    }
-    [TestMethod]
-    public async Task TestAsyncInsteadUsage()
-    {
-        var testCode = @"
+            await AwaiterResultVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
+        [TestMethod]
+        public async Task TestAsyncInsteadUsage()
+        {
+            var testCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -225,7 +226,7 @@ public class TestClass
     }
 }";
 
-        var fixedCode = @"
+            var fixedCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -243,16 +244,16 @@ public class TestClass
     }
 }";
 
-        var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
-            .WithLocation(7, 22)
-            .WithArguments("Get", "GetAsync");
+            var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
+                .WithLocation(7, 22)
+                .WithArguments("Get", "GetAsync");
 
-        await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
-    }
-    [TestMethod]
-    public async Task TestAsyncInsteadUsage2()
-    {
-        var testCode = @"
+            await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
+        [TestMethod]
+        public async Task TestAsyncInsteadUsage2()
+        {
+            var testCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -271,7 +272,7 @@ public class TestClass
     }
 }";
 
-        var fixedCode = @"
+            var fixedCode = @"
 using System.Threading.Tasks;
 public class TestClass
 {
@@ -290,10 +291,11 @@ public class TestClass
     }
 }";
 
-        var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
-            .WithLocation(8, 22)
-            .WithArguments("Get", "GetAsync");
+            var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
+                .WithLocation(8, 22)
+                .WithArguments("Get", "GetAsync");
 
-        await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+            await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
     }
 }

@@ -4,51 +4,53 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class TaskWaitAnalyzer : DiagnosticAnalyzer
+namespace Async.Analyzers
 {
-    public const string DiagnosticId = "TaskWaitAnalyzer";
-
-    private static readonly LocalizableString Title = "Avoid direct 'Wait()' usage on Task";
-    private static readonly LocalizableString MessageFormat = "Consider using 'await' to access the result of the Task";
-    private static readonly LocalizableString Description = "Using 'Wait()' can lead to deadlocks and threadpool exhaustion. Prefer 'await'.";
-    private const string Category = "Usage";
-
-    private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
-        DiagnosticId,
-        Title,
-        MessageFormat,
-        Category,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true,
-        description: Description);
-
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
-
-    public override void Initialize(AnalysisContext context)
+    [DiagnosticAnalyzer(LanguageNames.CSharp)]
+    public class TaskWaitAnalyzer : DiagnosticAnalyzer
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.InvocationExpression);
-    }
+        public const string DiagnosticId = "TaskWaitAnalyzer";
 
-    private static void AnalyzeNode(SyntaxNodeAnalysisContext context)
-    {
-        var invocationExpr = (InvocationExpressionSyntax)context.Node;
-        var memberAccessExpr = invocationExpr.Expression as MemberAccessExpressionSyntax;
-        if (memberAccessExpr == null)
-            return;
-        var memberSymbol = context.SemanticModel.GetSymbolInfo(memberAccessExpr).Symbol;
+        private static readonly LocalizableString Title = "Avoid direct 'Wait()' usage on Task";
+        private static readonly LocalizableString MessageFormat = "Consider using 'await' to access the result of the Task";
+        private static readonly LocalizableString Description = "Using 'Wait()' can lead to deadlocks and threadpool exhaustion. Prefer 'await'.";
+        private const string Category = "Usage";
 
-        if (memberSymbol == null)
-            return;
-        if (!memberSymbol.ContainingType.IsTaskType(context.SemanticModel))
-            return;
+        private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
+            DiagnosticId,
+            Title,
+            MessageFormat,
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: Description);
 
-        if (memberAccessExpr.Name.Identifier.Text == "Wait")
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+
+        public override void Initialize(AnalysisContext context)
         {
-            var diagnostic = Diagnostic.Create(Rule, memberAccessExpr.GetLocation());
-            context.ReportDiagnostic(diagnostic);
+            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+            context.EnableConcurrentExecution();
+            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.InvocationExpression);
+        }
+
+        private static void AnalyzeNode(SyntaxNodeAnalysisContext context)
+        {
+            var invocationExpr = (InvocationExpressionSyntax)context.Node;
+            if (!(invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr))
+                return;
+            var memberSymbol = context.SemanticModel.GetSymbolInfo(memberAccessExpr).Symbol;
+
+            if (memberSymbol == null)
+                return;
+            if (!memberSymbol.ContainingType.IsTaskType(context.SemanticModel))
+                return;
+
+            if (memberAccessExpr.Name.Identifier.Text == "Wait")
+            {
+                var diagnostic = Diagnostic.Create(Rule, memberAccessExpr.GetLocation());
+                context.ReportDiagnostic(diagnostic);
+            }
         }
     }
 }
