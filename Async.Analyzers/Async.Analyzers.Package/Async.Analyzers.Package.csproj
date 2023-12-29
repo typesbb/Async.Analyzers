@@ -26,6 +26,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Async.Analyzers.CodeFixes\Async.Analyzers.CodeFixes.csproj" />
 		<ProjectReference Include="..\Async.Analyzers\Async.Analyzers.csproj" />
 	</ItemGroup>
 
