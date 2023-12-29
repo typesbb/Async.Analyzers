@@ -9,14 +9,14 @@ public static class TaskExtensions
 {
     public static bool IsTaskType(this INamedTypeSymbol typeSymbol, SemanticModel semanticModel)
     {
-        if (typeSymbol.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.Task")) ||
-            typeSymbol.ConstructedFrom.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.Task`1")) ||
-            typeSymbol.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.ValueTask")) ||
-            typeSymbol.ConstructedFrom.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.ValueTask`1")) ||
-            typeSymbol.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ConfiguredTaskAwaitable")) ||
-            typeSymbol.ConstructedFrom.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ConfiguredTaskAwaitable`1")) ||
-            typeSymbol.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable")) ||
-            typeSymbol.ConstructedFrom.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable`1")))
+        if (typeSymbol.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.Task"), SymbolEqualityComparer.Default) ||
+            typeSymbol.ConstructedFrom.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.Task`1"), SymbolEqualityComparer.Default) ||
+            typeSymbol.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.ValueTask"), SymbolEqualityComparer.Default) ||
+            typeSymbol.ConstructedFrom.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.ValueTask`1"), SymbolEqualityComparer.Default) ||
+            typeSymbol.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ConfiguredTaskAwaitable"), SymbolEqualityComparer.Default) ||
+            typeSymbol.ConstructedFrom.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ConfiguredTaskAwaitable`1"), SymbolEqualityComparer.Default) ||
+            typeSymbol.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable"), SymbolEqualityComparer.Default) ||
+            typeSymbol.ConstructedFrom.Equals(semanticModel.Compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable`1"), SymbolEqualityComparer.Default))
             return true;
 
         return false;

@@ -9,17 +9,16 @@
 
 	<PropertyGroup>
 		<PackageId>Async.Analyzers</PackageId>
-		<PackageVersion>1.0.0.0</PackageVersion>
-		<Authors>types</Authors>
-		<PackageLicenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</PackageLicenseUrl>
-		<PackageProjectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</PackageProjectUrl>
-		<PackageIconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</PackageIconUrl>
-		<RepositoryUrl>http://REPOSITORY_URL_HERE_OR_DELETE_THIS_LINE</RepositoryUrl>
+		<PackageVersion>1.0.2</PackageVersion>
+		<Authors>typesbb</Authors>
+		<PackageProjectUrl>https://github.com/typesbb/Async.Analyzers</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/typesbb/Async.Analyzers</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>Task,await,async,Analyzer</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<Description>Async.Analyzers</Description>
-		<PackageReleaseNotes>Summary of changes made in this release of the package.</PackageReleaseNotes>
 		<Copyright>Copyright</Copyright>
-		<PackageTags>Async.Analyzers, analyzers</PackageTags>
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 
@@ -33,6 +32,13 @@
 
 	<ItemGroup>
 		<None Update="tools\*.ps1" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="../../README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
 	</ItemGroup>
 
 	<Target Name="_AddAnalyzersToOutput">
