@@ -9,15 +9,15 @@
 
 	<PropertyGroup>
 		<PackageId>Async.Analyzers</PackageId>
-		<PackageVersion>1.0.2</PackageVersion>
+		<PackageVersion>1.0.4</PackageVersion>
 		<Authors>typesbb</Authors>
 		<PackageProjectUrl>https://github.com/typesbb/Async.Analyzers</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/typesbb/Async.Analyzers</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>Task,await,async,Analyzer</PackageTags>
+		<PackageTags>Task,await,async,analyze</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-		<Description>Async.Analyzers</Description>
+		<Description>Task,await,async,Analyzer</Description>
 		<Copyright>Copyright</Copyright>
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
