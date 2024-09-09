@@ -51,19 +51,21 @@ namespace Async.Analyzers
                 return;
             }
 
-            if (methodSymbol != null)
+            if (methodSymbol == null)
+                return;
+            if (methodSymbol.ContainingType == null)
+                return;
+
+            // Find async methods with same name as current method
+            var asyncMethod = methodSymbol.ContainingType.GetMembers()
+                .OfType<IMethodSymbol>()
+                .Where(m => m.ReturnType is INamedTypeSymbol typeSymbol && typeSymbol != null && typeSymbol.IsTaskType(context.SemanticModel) && (m.Name == methodSymbol.Name || m.Name == methodSymbol.Name + "Async"))
+                .Where(m => Enumerable.SequenceEqual(m.Parameters, methodSymbol.Parameters, SymbolEqualityComparer.Default))
+                .FirstOrDefault();
+            if (asyncMethod != null)
             {
-                // Find async methods with same name as current method
-                var asyncMethod = methodSymbol.ContainingType.GetMembers()
-                    .OfType<IMethodSymbol>()
-                    .Where(m => m.ReturnType is INamedTypeSymbol typeSymbol && typeSymbol != null && typeSymbol.IsTaskType(context.SemanticModel) && (m.Name == methodSymbol.Name || m.Name == methodSymbol.Name + "Async"))
-                    .Where(m => Enumerable.SequenceEqual(m.Parameters, methodSymbol.Parameters, SymbolEqualityComparer.Default))
-                    .FirstOrDefault();
-                if (asyncMethod != null)
-                {
-                    var diagnostic = Diagnostic.Create(Rule, invocationExpr.GetLocation(), methodSymbol.Name, asyncMethod.Name);
-                    context.ReportDiagnostic(diagnostic);
-                }
+                var diagnostic = Diagnostic.Create(Rule, invocationExpr.GetLocation(), methodSymbol.Name, asyncMethod.Name);
+                context.ReportDiagnostic(diagnostic);
             }
         }
     }

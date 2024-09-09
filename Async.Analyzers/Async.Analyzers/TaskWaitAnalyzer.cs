@@ -43,9 +43,13 @@ namespace Async.Analyzers
 
             if (memberSymbol == null)
                 return;
+            if (memberSymbol.ContainingType == null)
+                return;
             if (!memberSymbol.ContainingType.IsTaskType(context.SemanticModel))
                 return;
 
+            if (memberAccessExpr.Name == null)
+                return;
             if (memberAccessExpr.Name.Identifier.Text == "Wait")
             {
                 var diagnostic = Diagnostic.Create(Rule, memberAccessExpr.GetLocation());

@@ -40,6 +40,8 @@ namespace Async.Analyzers
             if (!(invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr))
                 return;
 
+            if (memberAccessExpr.Name == null)
+                return;
             if (memberAccessExpr.Name.Identifier.Text == "GetResult" &&
                 memberAccessExpr.Expression is InvocationExpressionSyntax invocation && invocation != null &&
                 invocation.Expression is MemberAccessExpressionSyntax accessor && accessor != null &&
@@ -47,6 +49,8 @@ namespace Async.Analyzers
             {
                 var memberSymbol = context.SemanticModel.GetSymbolInfo(accessor).Symbol;
                 if (memberSymbol == null)
+                    return;
+                if (memberSymbol.ContainingType == null)
                     return;
                 if (!memberSymbol.ContainingType.IsTaskType(context.SemanticModel))
                     return;
