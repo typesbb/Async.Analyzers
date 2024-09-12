@@ -44,36 +44,29 @@ namespace Async.Analyzers
 
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
             var methodSymbol = semanticModel.GetSymbolInfo(invocationExpr).Symbol as IMethodSymbol;
+            if (methodSymbol == null)
+                return editor.GetChangedDocument();
 
-            // Find async methods with same name as current method
-            var asyncMethod = methodSymbol.ContainingType.GetMembers()
-                .OfType<IMethodSymbol>()
-                .Where(m => m.ReturnType is INamedTypeSymbol typeSymbol && typeSymbol != null && typeSymbol.IsTaskType(semanticModel) && (m.Name == methodSymbol.Name || m.Name == methodSymbol.Name + "Async"))
-                .Where(m => Enumerable.SequenceEqual(m.Parameters, methodSymbol.Parameters, SymbolEqualityComparer.Default))
-                .FirstOrDefault();
-            if (methodSymbol != null)
+            // Replace method invocation with the async method
+            ExpressionSyntax newExpression = null;
+            if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr && memberAccessExpr != null)
             {
-                // Replace method invocation with the async method
-                ExpressionSyntax newExpression = null;
-                if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr && memberAccessExpr != null)
-                {
-                    newExpression = SyntaxFactory.MemberAccessExpression(memberAccessExpr.Kind(), memberAccessExpr.Expression, SyntaxFactory.IdentifierName(asyncMethod.Name));
-                }
-                else if (invocationExpr.Expression is IdentifierNameSyntax identifierName && identifierName != null)
-                {
-                    newExpression = SyntaxFactory.IdentifierName(asyncMethod.Name);
-                }
-                var newInvocation = SyntaxFactory.InvocationExpression(newExpression, invocationExpr.ArgumentList);
-                ExpressionSyntax awaitExpression = SyntaxFactory.AwaitExpression(newInvocation).WithLeadingTrivia(invocationExpr.GetLeadingTrivia()).WithTrailingTrivia(invocationExpr.GetTrailingTrivia());
-
-                if (invocationExpr.Parent is ExpressionSyntax expressionSyntax && expressionSyntax != null && expressionSyntax.IsPrecedenceGreaterThanAwait())
-                {
-                    awaitExpression = SyntaxFactory.ParenthesizedExpression(awaitExpression)
-                        .WithAdditionalAnnotations(Formatter.Annotation);
-                }
-
-                editor.ReplaceNode(invocationExpr, awaitExpression);
+                newExpression = SyntaxFactory.MemberAccessExpression(memberAccessExpr.Kind(), memberAccessExpr.Expression, SyntaxFactory.IdentifierName(methodSymbol.Name + "Async"));
             }
+            else if (invocationExpr.Expression is IdentifierNameSyntax identifierName && identifierName != null)
+            {
+                newExpression = SyntaxFactory.IdentifierName(methodSymbol.Name + "Async");
+            }
+            var newInvocation = SyntaxFactory.InvocationExpression(newExpression, invocationExpr.ArgumentList);
+            ExpressionSyntax awaitExpression = SyntaxFactory.AwaitExpression(newInvocation).WithLeadingTrivia(invocationExpr.GetLeadingTrivia()).WithTrailingTrivia(invocationExpr.GetTrailingTrivia());
+
+            if (invocationExpr.Parent is ExpressionSyntax expressionSyntax && expressionSyntax != null && expressionSyntax.IsPrecedenceGreaterThanAwait())
+            {
+                awaitExpression = SyntaxFactory.ParenthesizedExpression(awaitExpression)
+                    .WithAdditionalAnnotations(Formatter.Annotation);
+            }
+
+            editor.ReplaceNode(invocationExpr, awaitExpression);
 
             return editor.GetChangedDocument();
         }

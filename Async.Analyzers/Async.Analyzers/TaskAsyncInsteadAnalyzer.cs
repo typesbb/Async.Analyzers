@@ -55,17 +55,58 @@ namespace Async.Analyzers
                 return;
             if (methodSymbol.ContainingType == null)
                 return;
+            if (methodSymbol.Name.EndsWith("Async"))
+                return;
 
             // Find async methods with same name as current method
             var asyncMethod = methodSymbol.ContainingType.GetMembers()
                 .OfType<IMethodSymbol>()
-                .Where(m => m.ReturnType is INamedTypeSymbol typeSymbol && typeSymbol != null && typeSymbol.IsTaskType(context.SemanticModel) && (m.Name == methodSymbol.Name || m.Name == methodSymbol.Name + "Async"))
+                .Where(m => m.ReturnType is INamedTypeSymbol typeSymbol
+                    && typeSymbol != null
+                    && typeSymbol.IsTaskType(context.SemanticModel)
+                    && m.Name == methodSymbol.Name + "Async")
                 .Where(m => Enumerable.SequenceEqual(m.Parameters, methodSymbol.Parameters, SymbolEqualityComparer.Default))
                 .FirstOrDefault();
             if (asyncMethod != null)
             {
                 var diagnostic = Diagnostic.Create(Rule, invocationExpr.GetLocation(), methodSymbol.Name, asyncMethod.Name);
                 context.ReportDiagnostic(diagnostic);
+            }
+            else
+            {
+                // Check all classes in the current solution for the async method
+                var allTypes = GetAllTypes(context.Compilation.GlobalNamespace);
+                asyncMethod = allTypes
+                    .SelectMany(typeSymbol => typeSymbol.GetMembers().OfType<IMethodSymbol>())
+                    .Where(m => m.ReturnType is INamedTypeSymbol typeSymbol
+                        && typeSymbol != null
+                        && typeSymbol.IsTaskType(context.SemanticModel)
+                        && m.Name == methodSymbol.Name + "Async")
+                    .Where(m => Enumerable.SequenceEqual(m.IsExtensionMethod ? m.Parameters.Skip(1) : m.Parameters, methodSymbol.Parameters, SymbolEqualityComparer.Default))
+                    .FirstOrDefault();
+
+                if (asyncMethod != null)
+                {
+                    var diagnostic = Diagnostic.Create(Rule, invocationExpr.GetLocation(), methodSymbol.Name, asyncMethod.Name);
+                    context.ReportDiagnostic(diagnostic);
+                }
+            }
+        }
+        private static IEnumerable<INamedTypeSymbol> GetAllTypes(INamespaceSymbol namespaceSymbol)
+        {
+            foreach (var member in namespaceSymbol.GetMembers())
+            {
+                if (member is INamedTypeSymbol namedType)
+                {
+                    yield return namedType;
+                }
+                else if (member is INamespaceSymbol childNamespace)
+                {
+                    foreach (var nestedType in GetAllTypes(childNamespace))
+                    {
+                        yield return nestedType;
+                    }
+                }
             }
         }
     }

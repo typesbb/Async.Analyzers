@@ -296,5 +296,54 @@ public class TestClass
 
             await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
         }
+        [TestMethod]
+        public async Task TestAsyncInsteadUsage3()
+        {
+            var testCode = @"
+using System.Threading.Tasks;
+public class TestClass
+{
+    public async Task MethodAsync()
+    {
+        var sc = new TestClass();
+        sc.MyMethod();
+    }
+}
+public static class SyncClass
+{
+    public static void MyMethod(this TestClass obj) { }
+}
+
+public static class AsyncClass
+{
+    public static async Task MyMethodAsync(this TestClass obj) { }
+}";
+
+            var fixedCode = @"
+using System.Threading.Tasks;
+public class TestClass
+{
+    public async Task MethodAsync()
+    {
+        var sc = new TestClass();
+        await sc.MyMethodAsync();
+    }
+}
+public static class SyncClass
+{
+    public static void MyMethod(this TestClass obj) { }
+}
+
+public static class AsyncClass
+{
+    public static async Task MyMethodAsync(this TestClass obj) { }
+}";
+
+            var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
+                .WithLocation(8, 9)
+                .WithArguments("MyMethod", "MyMethodAsync");
+
+            await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
     }
 }
