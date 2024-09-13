@@ -43,6 +43,8 @@ namespace Async.Analyzers
             var editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+            if (semanticModel == null)
+                return editor.GetChangedDocument();
             var methodSymbol = semanticModel.GetSymbolInfo(invocationExpr).Symbol as IMethodSymbol;
             if (methodSymbol == null)
                 return editor.GetChangedDocument();
@@ -56,6 +58,10 @@ namespace Async.Analyzers
             else if (invocationExpr.Expression is IdentifierNameSyntax identifierName && identifierName != null)
             {
                 newExpression = SyntaxFactory.IdentifierName(methodSymbol.Name + "Async");
+            }
+            else
+            {
+                return editor.GetChangedDocument();
             }
             var newInvocation = SyntaxFactory.InvocationExpression(newExpression, invocationExpr.ArgumentList);
             ExpressionSyntax awaitExpression = SyntaxFactory.AwaitExpression(newInvocation).WithLeadingTrivia(invocationExpr.GetLeadingTrivia()).WithTrailingTrivia(invocationExpr.GetTrailingTrivia());
