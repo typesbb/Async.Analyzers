@@ -78,11 +78,13 @@ namespace Async.Analyzers
                 var allTypes = GetAllTypes(context.Compilation.GlobalNamespace);
                 asyncMethod = allTypes
                     .SelectMany(typeSymbol => typeSymbol.GetMembers().OfType<IMethodSymbol>())
-                    .Where(m => m.ReturnType is INamedTypeSymbol typeSymbol
+                    .Where(m => m.IsExtensionMethod
+                        && m.ReturnType is INamedTypeSymbol typeSymbol
                         && typeSymbol != null
                         && typeSymbol.IsTaskType(context.SemanticModel)
                         && m.Name == methodSymbol.Name + "Async")
-                    .Where(m => Enumerable.SequenceEqual(m.IsExtensionMethod ? m.Parameters.Skip(1) : m.Parameters, methodSymbol.Parameters, SymbolEqualityComparer.Default))
+                    .Where(m => SymbolEqualityComparer.Default.Equals(m.Parameters.First().Type, methodSymbol.ReceiverType))
+                    .Where(m => Enumerable.SequenceEqual(m.Parameters.Skip(1), methodSymbol.Parameters, SymbolEqualityComparer.Default))
                     .FirstOrDefault();
 
                 if (asyncMethod != null)
@@ -96,7 +98,7 @@ namespace Async.Analyzers
         {
             foreach (var member in namespaceSymbol.GetMembers())
             {
-                if (member is INamedTypeSymbol namedType)
+                if (member is INamedTypeSymbol namedType && namedType != null && namedType.IsStatic)
                 {
                     yield return namedType;
                 }
@@ -104,6 +106,8 @@ namespace Async.Analyzers
                 {
                     foreach (var nestedType in GetAllTypes(childNamespace))
                     {
+                        if (!nestedType.IsStatic)
+                            continue;
                         yield return nestedType;
                     }
                 }
