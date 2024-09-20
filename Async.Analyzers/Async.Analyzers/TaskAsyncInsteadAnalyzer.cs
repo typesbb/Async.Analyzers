@@ -83,7 +83,7 @@ namespace Async.Analyzers
                         && typeSymbol != null
                         && typeSymbol.IsTaskType(context.SemanticModel)
                         && m.Name == methodSymbol.Name + "Async")
-                    .Where(m => SymbolEqualityComparer.Default.Equals(m.Parameters.First().Type, methodSymbol.ReceiverType))
+                    .Where(m => IsSubtypeOf(m.Parameters.First().Type, methodSymbol.ReceiverType))
                     .Where(m => Enumerable.SequenceEqual(m.Parameters.Skip(1), methodSymbol.Parameters, SymbolEqualityComparer.Default))
                     .FirstOrDefault();
 
@@ -112,6 +112,42 @@ namespace Async.Analyzers
                     }
                 }
             }
+        }
+        private static bool IsSubtypeOf(ITypeSymbol type, ITypeSymbol baseType)
+        {
+            if (type == null || baseType == null)
+            {
+                return false;
+            }
+
+            // 检查类型自身是否与基类类型一致
+            if (SymbolEqualityComparer.Default.Equals(type, baseType))
+            {
+                return true;
+            }
+
+            // 检查类型的基类
+            var currentBaseType = type.BaseType;
+            while (currentBaseType != null)
+            {
+                if (SymbolEqualityComparer.Default.Equals(currentBaseType, baseType))
+                {
+                    return true;
+                }
+                currentBaseType = currentBaseType.BaseType;
+            }
+
+            // 检查实现的接口
+            foreach (var interfaceType in type.AllInterfaces)
+            {
+                if (SymbolEqualityComparer.Default.Equals(interfaceType, baseType))
+                {
+                    return true;
+                }
+            }
+
+            // 若无继承关系
+            return false;
         }
     }
 }
