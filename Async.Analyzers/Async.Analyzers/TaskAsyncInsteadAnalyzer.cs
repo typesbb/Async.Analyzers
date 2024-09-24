@@ -83,8 +83,11 @@ namespace Async.Analyzers
                         && typeSymbol != null
                         && typeSymbol.IsTaskType(context.SemanticModel)
                         && m.Name == methodSymbol.Name + "Async")
-                    .Where(m => IsSubtypeOf(m.Parameters.First().Type, methodSymbol.ReceiverType))
-                    .Where(m => Enumerable.SequenceEqual(m.Parameters.Skip(1), methodSymbol.Parameters, SymbolEqualityComparer.Default))
+                    .Where(m => SymbolEqualityComparer.Default.Equals(m.Parameters.First().Type.OriginalDefinition, methodSymbol.ReceiverType.OriginalDefinition))
+                    .Where(m => Enumerable.SequenceEqual(
+                        m.Parameters.Skip(1).Where(e => !e.IsThis && !e.IsOptional).Select(e => e.Type.OriginalDefinition),
+                        methodSymbol.Parameters.Where(e => !e.IsThis && !e.IsOptional).Select(e => e.Type.OriginalDefinition),
+                        SymbolEqualityComparer.Default))
                     .FirstOrDefault();
 
                 if (asyncMethod != null)
