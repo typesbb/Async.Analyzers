@@ -83,7 +83,7 @@ namespace Async.Analyzers
                         && typeSymbol != null
                         && typeSymbol.IsTaskType(context.SemanticModel)
                         && m.Name == methodSymbol.Name + "Async")
-                    .Where(m => SymbolEqualityComparer.Default.Equals(m.Parameters.First().Type.OriginalDefinition, methodSymbol.ReceiverType.OriginalDefinition))
+                    .Where(m => IsSubtypeOf(m.Parameters.First().Type.OriginalDefinition, methodSymbol.ReceiverType.OriginalDefinition))
                     .Where(m => Enumerable.SequenceEqual(
                         m.Parameters.Skip(1).Where(e => !e.IsThis && !e.IsOptional).Select(e => e.Type.OriginalDefinition),
                         methodSymbol.Parameters.Where(e => !e.IsThis && !e.IsOptional).Select(e => e.Type.OriginalDefinition),
@@ -92,6 +92,10 @@ namespace Async.Analyzers
 
                 if (asyncMethod != null)
                 {
+                    if (IsInIQueryableLinqQuery(invocationExpr, context.SemanticModel))
+                    {
+                        return;
+                    }
                     var diagnostic = Diagnostic.Create(Rule, invocationExpr.GetLocation(), methodSymbol.Name, asyncMethod.Name);
                     context.ReportDiagnostic(diagnostic);
                 }
@@ -124,7 +128,7 @@ namespace Async.Analyzers
             }
 
             // 检查类型自身是否与基类类型一致
-            if (SymbolEqualityComparer.Default.Equals(type, baseType))
+            if (SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, baseType.OriginalDefinition))
             {
                 return true;
             }
@@ -133,7 +137,7 @@ namespace Async.Analyzers
             var currentBaseType = type.BaseType;
             while (currentBaseType != null)
             {
-                if (SymbolEqualityComparer.Default.Equals(currentBaseType, baseType))
+                if (SymbolEqualityComparer.Default.Equals(currentBaseType.OriginalDefinition, baseType.OriginalDefinition))
                 {
                     return true;
                 }
@@ -143,7 +147,7 @@ namespace Async.Analyzers
             // 检查实现的接口
             foreach (var interfaceType in type.AllInterfaces)
             {
-                if (SymbolEqualityComparer.Default.Equals(interfaceType, baseType))
+                if (SymbolEqualityComparer.Default.Equals(interfaceType.OriginalDefinition, baseType.OriginalDefinition))
                 {
                     return true;
                 }
@@ -151,6 +155,42 @@ namespace Async.Analyzers
 
             // 若无继承关系
             return false;
+        }
+        private static bool IsInIQueryableLinqQuery(SyntaxNode node, SemanticModel semanticModel)
+        {
+            if (node == null || semanticModel == null)
+            {
+                return false;
+            }
+
+            // 当前节点的父节点
+            SyntaxNode current = node.Parent;
+
+            while (current != null)
+            {
+                if (current is QueryExpressionSyntax || current is InvocationExpressionSyntax)
+                {
+                    // 获取当前表达式的类型信息
+                    var typeInfo = semanticModel.GetTypeInfo(current);
+                    if (typeInfo.Type != null && IsIQueryableType(typeInfo.Type))
+                    {
+                        return true;
+                    }
+                }
+
+                // 移动到上一个父节点
+                current = current.Parent;
+            }
+
+            return false;
+            bool IsIQueryableType(ITypeSymbol typeSymbol)
+            {
+                var iqueryableType = typeSymbol
+                    .AllInterfaces
+                    .FirstOrDefault(i => i.OriginalDefinition.ToString() == "System.Linq.IQueryable<T>");
+
+                return iqueryableType != null;
+            }
         }
     }
 }
