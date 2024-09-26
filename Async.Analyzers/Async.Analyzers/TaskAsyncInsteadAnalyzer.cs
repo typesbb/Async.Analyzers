@@ -72,8 +72,9 @@ namespace Async.Analyzers
                 var diagnostic = Diagnostic.Create(Rule, invocationExpr.GetLocation(), methodSymbol.Name, asyncMethod.Name);
                 context.ReportDiagnostic(diagnostic);
             }
-            else
+            else if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr)
             {
+                var typeInfo = context.SemanticModel.GetTypeInfo(memberAccessExpr).Type;
                 // Check all classes in the current solution for the async method
                 var allTypes = GetAllTypes(context.Compilation.GlobalNamespace);
                 asyncMethod = allTypes
@@ -83,7 +84,7 @@ namespace Async.Analyzers
                         && typeSymbol != null
                         && typeSymbol.IsTaskType(context.SemanticModel)
                         && m.Name == methodSymbol.Name + "Async")
-                    .Where(m => IsSubtypeOf(m.Parameters.First().Type.OriginalDefinition, methodSymbol.ReceiverType.OriginalDefinition))
+                    .Where(m => SymbolEqualityComparer.Default.Equals(m.Parameters.First().Type.OriginalDefinition, typeInfo.OriginalDefinition))
                     .Where(m => Enumerable.SequenceEqual(
                         m.Parameters.Skip(1).Where(e => !e.IsThis && !e.IsOptional).Select(e => e.Type.OriginalDefinition),
                         methodSymbol.Parameters.Where(e => !e.IsThis && !e.IsOptional).Select(e => e.Type.OriginalDefinition),
@@ -187,7 +188,7 @@ namespace Async.Analyzers
             {
                 var iqueryableType = typeSymbol
                     .AllInterfaces
-                    .FirstOrDefault(i => i.OriginalDefinition.ToString() == "System.Linq.IQueryable<T>");
+                    .FirstOrDefault(i => i.OriginalDefinition.ToString() == "System.Linq.IQueryable");
 
                 return iqueryableType != null;
             }
