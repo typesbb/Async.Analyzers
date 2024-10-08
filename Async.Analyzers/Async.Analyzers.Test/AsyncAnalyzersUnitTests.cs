@@ -345,5 +345,54 @@ public static class AsyncClass
 
             await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
         }
+        [TestMethod]
+        public async Task TestAsyncInsteadUsage4()
+        {
+            var testCode = @"
+using System.Threading.Tasks;
+using System.Collections.Generic;
+public class TestClass
+{
+    public async Task MethodAsync()
+    {
+        var list = new List<int>();
+        list.IndexOf(Get<int>(),1);
+    }
+    public int Get<T>()
+    {
+        return 42;
+    }
+    public Task<int> GetAsync<T>()
+    {
+        return Task.FromResult(42);
+    }
+}";
+
+            var fixedCode = @"
+using System.Threading.Tasks;
+using System.Collections.Generic;
+public class TestClass
+{
+    public async Task MethodAsync()
+    {
+        var list = new List<int>();
+        list.IndexOf(await GetAsync<int>(),1);
+    }
+    public int Get<T>()
+    {
+        return 42;
+    }
+    public Task<int> GetAsync<T>()
+    {
+        return Task.FromResult(42);
+    }
+}";
+
+            var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
+                .WithLocation(9, 22)
+                .WithArguments("Get", "GetAsync");
+
+            await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
     }
 }

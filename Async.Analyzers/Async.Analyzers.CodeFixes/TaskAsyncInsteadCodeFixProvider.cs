@@ -27,14 +27,21 @@ namespace Async.Analyzers
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
-            if (root.FindNode(diagnostic.Location.SourceSpan) is InvocationExpressionSyntax invocationExpr)
+            var syntaxNode = root.FindNode(diagnostic.Location.SourceSpan);
+            var invocationExpr = syntaxNode as InvocationExpressionSyntax;
+            if (invocationExpr == null)
+            {
+                //ArgumentSyntax
+                invocationExpr = syntaxNode.ChildNodes().First() as InvocationExpressionSyntax;
+            }
+            if (invocationExpr != null)
             {
                 context.RegisterCodeFix(
-                    CodeAction.Create(
-                        title: "Replace with async method",
-                        createChangedDocument: c => ReplaceWithAsyncMethod(context.Document, invocationExpr, c),
-                        equivalenceKey: "Replace with async method"),
-                    diagnostic);
+                CodeAction.Create(
+                    title: "Replace with async method",
+                    createChangedDocument: c => ReplaceWithAsyncMethod(context.Document, invocationExpr, c),
+                    equivalenceKey: "Replace with async method"),
+                diagnostic);
             }
         }
 
@@ -58,6 +65,13 @@ namespace Async.Analyzers
             else if (invocationExpr.Expression is IdentifierNameSyntax identifierName && identifierName != null)
             {
                 newExpression = SyntaxFactory.IdentifierName(methodSymbol.Name + "Async");
+            }
+            else if (invocationExpr.Expression is GenericNameSyntax genericNameSyntax && genericNameSyntax != null)
+            {
+                newExpression = SyntaxFactory.GenericName(
+                    SyntaxFactory.Identifier(methodSymbol.Name + "Async"),
+                    SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(
+                        methodSymbol.TypeArguments.Select(arg => SyntaxFactory.ParseTypeName(arg.ToDisplayString())))));
             }
             else
             {
