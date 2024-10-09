@@ -60,7 +60,19 @@ namespace Async.Analyzers
             ExpressionSyntax newExpression = null;
             if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr && memberAccessExpr != null)
             {
-                newExpression = SyntaxFactory.MemberAccessExpression(memberAccessExpr.Kind(), memberAccessExpr.Expression, SyntaxFactory.IdentifierName(methodSymbol.Name + "Async"));
+                SimpleNameSyntax simpleNameSyntax;
+                if (methodSymbol.IsGenericMethod)
+                {
+                    simpleNameSyntax = SyntaxFactory.GenericName(
+                        SyntaxFactory.Identifier(methodSymbol.Name + "Async"),
+                        SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(
+                            methodSymbol.TypeArguments.Select(arg => SyntaxFactory.ParseTypeName(arg.ToDisplayString())))));
+                }
+                else
+                {
+                    simpleNameSyntax = SyntaxFactory.IdentifierName(methodSymbol.Name + "Async");
+                }
+                newExpression = SyntaxFactory.MemberAccessExpression(memberAccessExpr.Kind(), memberAccessExpr.Expression, simpleNameSyntax);
             }
             else if (invocationExpr.Expression is IdentifierNameSyntax identifierName && identifierName != null)
             {

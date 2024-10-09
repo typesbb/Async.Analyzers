@@ -213,13 +213,13 @@ public class TestClass
 {
     public async Task MethodAsync()
     {
-        var result = Get();
+        var result = Get(1);
     }
-    public int Get()
+    public int Get(int i)
     {
         return 42;
     }
-    public Task<int> GetAsync()
+    public Task<int> GetAsync(int i)
     {
         return Task.FromResult(42);
     }
@@ -231,13 +231,13 @@ public class TestClass
 {
     public async Task MethodAsync()
     {
-        var result = await GetAsync();
+        var result = await GetAsync(1);
     }
-    public int Get()
+    public int Get(int i)
     {
         return 42;
     }
-    public Task<int> GetAsync()
+    public Task<int> GetAsync(int i)
     {
         return Task.FromResult(42);
     }
@@ -356,13 +356,13 @@ public class TestClass
     public async Task MethodAsync()
     {
         var list = new List<int>();
-        list.IndexOf(Get<int>(),1);
+        list.IndexOf(Get<object>(1),1);
     }
-    public int Get<T>()
+    public int Get<T>(int i)
     {
         return 42;
     }
-    public Task<int> GetAsync<T>()
+    public Task<int> GetAsync<T>(int i)
     {
         return Task.FromResult(42);
     }
@@ -376,13 +376,13 @@ public class TestClass
     public async Task MethodAsync()
     {
         var list = new List<int>();
-        list.IndexOf(await GetAsync<int>(),1);
+        list.IndexOf(await GetAsync<object>(1),1);
     }
-    public int Get<T>()
+    public int Get<T>(int i)
     {
         return 42;
     }
-    public Task<int> GetAsync<T>()
+    public Task<int> GetAsync<T>(int i)
     {
         return Task.FromResult(42);
     }
@@ -391,6 +391,55 @@ public class TestClass
             var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
                 .WithLocation(9, 22)
                 .WithArguments("Get", "GetAsync");
+
+            await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
+        [TestMethod]
+        public async Task TestAsyncInsteadUsage5()
+        {
+            var testCode = @"
+using System.Threading.Tasks;
+public class TestClass
+{
+    public async Task MethodAsync()
+    {
+        var sc = new TestClass();
+        sc.MyMethod<object>();
+    }
+}
+public static class SyncClass
+{
+    public static void MyMethod<T>(this TestClass obj) { }
+}
+
+public static class AsyncClass
+{
+    public static async Task MyMethodAsync<T>(this TestClass obj) { }
+}";
+
+            var fixedCode = @"
+using System.Threading.Tasks;
+public class TestClass
+{
+    public async Task MethodAsync()
+    {
+        var sc = new TestClass();
+        await sc.MyMethodAsync<object>();
+    }
+}
+public static class SyncClass
+{
+    public static void MyMethod<T>(this TestClass obj) { }
+}
+
+public static class AsyncClass
+{
+    public static async Task MyMethodAsync<T>(this TestClass obj) { }
+}";
+
+            var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
+                .WithLocation(8, 9)
+                .WithArguments("MyMethod", "MyMethodAsync");
 
             await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
         }
