@@ -61,12 +61,9 @@ namespace Async.Analyzers
             if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr && memberAccessExpr != null)
             {
                 SimpleNameSyntax simpleNameSyntax;
-                if (methodSymbol.IsGenericMethod)
+                if (memberAccessExpr.Name is GenericNameSyntax genericNameSyntax && genericNameSyntax != null)
                 {
-                    simpleNameSyntax = SyntaxFactory.GenericName(
-                        SyntaxFactory.Identifier(methodSymbol.Name + "Async"),
-                        SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(
-                            methodSymbol.TypeArguments.Select(arg => SyntaxFactory.ParseTypeName(arg.ToDisplayString())))));
+                    simpleNameSyntax = SyntaxFactory.GenericName(SyntaxFactory.Identifier(methodSymbol.Name + "Async"), genericNameSyntax.TypeArgumentList);
                 }
                 else
                 {
@@ -80,10 +77,7 @@ namespace Async.Analyzers
             }
             else if (invocationExpr.Expression is GenericNameSyntax genericNameSyntax && genericNameSyntax != null)
             {
-                newExpression = SyntaxFactory.GenericName(
-                    SyntaxFactory.Identifier(methodSymbol.Name + "Async"),
-                    SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(
-                        methodSymbol.TypeArguments.Select(arg => SyntaxFactory.ParseTypeName(arg.ToDisplayString())))));
+                newExpression = SyntaxFactory.GenericName(SyntaxFactory.Identifier(methodSymbol.Name + "Async"), genericNameSyntax.TypeArgumentList);
             }
             else
             {
