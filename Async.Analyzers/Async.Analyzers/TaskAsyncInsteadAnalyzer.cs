@@ -172,14 +172,18 @@ namespace Async.Analyzers
 
             while (current != null)
             {
-                if (current is QueryExpressionSyntax || current is InvocationExpressionSyntax)
+                if (current is LambdaExpressionSyntax)
                 {
                     // 获取当前表达式的类型信息
                     var typeInfo = semanticModel.GetTypeInfo(current);
-                    if (typeInfo.Type != null && IsIQueryableType(typeInfo.Type))
+                    if (typeInfo.ConvertedType != null && typeInfo.ConvertedType.BaseType.OriginalDefinition.ToString() == "System.Linq.Expressions.LambdaExpression")
                     {
                         return true;
                     }
+                }
+                if (current is QueryExpressionSyntax)
+                {
+                    return true;
                 }
 
                 // 移动到上一个父节点
