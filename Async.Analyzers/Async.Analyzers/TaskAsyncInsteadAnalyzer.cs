@@ -59,7 +59,7 @@ namespace Async.Analyzers
                 return;
 
             // Find async methods with same name as current method
-            var asyncMethod = methodSymbol.ContainingType.GetMembers()
+            var asyncMethod = GetAllMembers(methodSymbol.ContainingType)
                 .OfType<IMethodSymbol>()
                 .Where(m => m.ReturnType is INamedTypeSymbol typeSymbol
                     && typeSymbol != null
@@ -103,6 +103,22 @@ namespace Async.Analyzers
                     var diagnostic = Diagnostic.Create(Rule, invocationExpr.GetLocation(), methodSymbol.Name, asyncMethod.Name);
                     context.ReportDiagnostic(diagnostic);
                 }
+            }
+        }
+        public static IEnumerable<ISymbol> GetAllMembers(INamedTypeSymbol typeSymbol)
+        {
+            var currentType = typeSymbol;
+
+            while (currentType != null)
+            {
+                // 获取当前类型的所有成员
+                foreach (var member in currentType.GetMembers())
+                {
+                    yield return member;
+                }
+
+                // 移动到基类
+                currentType = currentType.BaseType;
             }
         }
         private static IEnumerable<INamedTypeSymbol> GetAllTypes(INamespaceSymbol namespaceSymbol)

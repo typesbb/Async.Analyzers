@@ -443,5 +443,60 @@ public static class AsyncClass
 
             await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
         }
+        [TestMethod]
+        public async Task TestAsyncInsteadUsage6()
+        {
+            var testCode = @"
+using System.Threading.Tasks;
+public class TastBase
+{
+    public Task<int> GetAsync()
+    {
+        return Task.FromResult(42);
+    }
+}
+public class TestClass:TastBase
+{
+    public async Task MethodAsync()
+    {
+        var obj = new TestClass();
+        //obj.Get();
+        obj.Get();
+    }
+    public int Get()
+    {
+        return 42;
+    }
+}";
+
+            var fixedCode = @"
+using System.Threading.Tasks;
+public class TastBase
+{
+    public Task<int> GetAsync()
+    {
+        return Task.FromResult(42);
+    }
+}
+public class TestClass:TastBase
+{
+    public async Task MethodAsync()
+    {
+        var obj = new TestClass();
+        //obj.Get();
+        await obj.GetAsync();
+    }
+    public int Get()
+    {
+        return 42;
+    }
+}";
+
+            var expectedDiagnostic = AsyncInsteadVerify.Diagnostic(TaskAsyncInsteadAnalyzer.DiagnosticId)
+                .WithLocation(16, 9)
+                .WithArguments("Get", "GetAsync");
+
+            await AsyncInsteadVerify.VerifyCodeFixAsync(testCode, expectedDiagnostic, fixedCode);
+        }
     }
 }
